@@ -54,9 +54,31 @@ print(f'Saved {min(500, len(texts))} examples to $OUTPUT_DIR/wikitext.jsonl')
 "
         ;;
 
+    python-code)
+        echo "Downloading CodeSearchNet Python (software engineering)..."
+        uv run python -c "
+from datasets import load_dataset
+import json
+
+# Load CodeSearchNet Python dataset
+ds = load_dataset('code_search_net', 'python', split='train')
+print(f'Loaded {len(ds)} examples')
+
+# Convert to JSONL with text field
+with open('$OUTPUT_DIR/python-code.jsonl', 'w') as f:
+    for item in ds:
+        # Each item has 'whole_func_string' - the complete function code
+        code = item.get('whole_func_string', '')
+        if code.strip():
+            f.write(json.dumps({'text': code}) + '\n')
+print(f'Saved {len(ds)} examples to $OUTPUT_DIR/python-code.jsonl')
+print(f'Approx size: {sum(len(x.get(\"whole_func_string\", \"\")) / 1024 / 1024 for x in ds):.1f} MB')
+"
+        ;;
+
     *)
         echo "Unknown dataset: $DATASET"
-        echo "Available: sample, tiny, wikitext"
+        echo "Available: sample, tiny, wikitext, python-code"
         exit 1
         ;;
 esac
