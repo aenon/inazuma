@@ -36,16 +36,51 @@ class MockTeacher:
 
 
 class APITeacher:
-    """API-based teacher model."""
+    """API-based teacher model for OpenAI-compatible APIs."""
 
     def __init__(self, config: TeacherConfig | None = None):
         self.config = config or TeacherConfig()
+        self._client = None
+
+    def _get_client(self):
+        """Lazy init HTTP client."""
+        if self._client is None:
+            import httpx
+            self._client = httpx.Client(
+                headers={
+                    "Authorization": f"Bearer {self.config.api_key}",
+                    "Content-Type": "application/json",
+                },
+                timeout=60.0,
+            )
+        return self._client
 
     def generate(self, prompt: str) -> str:
-        """Generate response via API."""
+        """Generate response via API (OpenAI-compatible)."""
         import httpx
-        # Simple implementation - replace with actual API call
-        raise NotImplementedError("API teacher needs implementation")
+
+        client = self._get_client()
+        payload = {
+            "model": self.config.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
+        }
+
+        try:
+            response = client.post(self.config.api_url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+            # OpenAI-style response
+            return data["choices"][0]["message"]["content"]
+
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"API request failed: {e.response.status_code}")
+        except (KeyError, IndexError) as e:
+            raise RuntimeError(f"Invalid API response format: {e}")
+        except Exception as e:
+            raise RuntimeError(f"API request failed: {e}")
 
 
 def get_teacher() -> TeacherClient:
