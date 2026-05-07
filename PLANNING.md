@@ -145,3 +145,76 @@
 - [ ] Can train student model with distillation
 - [ ] Can evaluate trained model on benchmarks
 - [ ] Documentation enables new user to get started in <30 minutes
+
+---
+
+## 8. Deployment Workflow (Brev GPU)
+
+### 8.1 Overview
+
+```
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   BUILD      │───▶│   PUSH       │───▶│   VERIFY     │───▶│   TRAIN      │
+│  Container   │    │   to Brev    │    │  Environment│    │   Model      │
+└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+                                                                    │
+                                                                    ▼
+                                                           ┌──────────────┐
+                                                           │  DOWNLOAD  │
+                                                           │ Artifacts  │
+                                                           └──────────────┘
+```
+
+### 8.2 Docker Image
+
+Create `Dockerfile` with:
+- Python 3.11+ base
+- uv for package management
+- All Python dependencies (no data)
+- Project code mounted at runtime
+
+### 8.3 Workflow Steps
+
+| Step | Action | Command/Script |
+|------|--------|----------------|
+| 1 | Build image | `docker build -t llm-train .` |
+| 2 | Push to Brev | `brev push` (or custom registry) |
+| 3 | Verify environment | `scripts/verify.sh` (check GPU, deps, connectivity) |
+| 4 | Sync data | `rsync/scp` data files to instance |
+| 5 | Run training | `uv run python -m src.train.train --config configs/train.yaml` |
+| 6 | Download artifacts | `scp` trained model + logs back to local |
+
+### 8.4 Data Sync (Runtime)
+
+The container does NOT contain data. Data is synced at runtime:
+
+```bash
+# From local machine to Brev instance
+scp -r data/raw/* user@brev-instance:/workspace/project/inazuma/data/raw/
+```
+
+### 8.5 Verification Script
+
+Create `scripts/verify.sh` to check:
+- [ ] GPU availability (`nvidia-smi`)
+- [ ] CUDA working (`python -c "import torch; print(torch.cuda.is_available())"`)
+- [ ] Dependencies installed (`uv sync`)
+- [ ] Teacher API connectivity
+- [ ] Data directory existence
+- [ ] Write permissions for outputs
+
+### 8.6 Artifact Download
+
+After training completes:
+```bash
+# Download from Brev to local
+scp -r user@brev-instance:/workspace/project/inazuma/checkpoints/ ./checkpoints/
+scp -r user@brev-instance:/workspace/project/inazuma/logs/ ./logs/
+```
+
+### 8.7 Reproducibility
+
+- All configs in `configs/` (commit to git)
+- Training logs contain all hyperparameters
+- checkpoints contain model weights + training state
+- Can re-run with same config and resume from checkpoint
