@@ -1,0 +1,2 @@
+# inazuma
+Training
