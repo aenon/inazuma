@@ -5,46 +5,64 @@ A minimal yet functional infrastructure for training language models using knowl
 ## Quick Start
 
 ```bash
-# 1. Initialize uv environment
-uv venv
-uv sync
+# 1. Install dependencies and setup
+make setup
 
-# 2. Configure teacher API
-cp configs/teacher.example.env configs/teacher.env
-# Edit configs/teacher.env with your API credentials
+# 2. Verify environment
+make verify
 
-# 3. Download sample data
-uv run python scripts/data/download.py --dataset sample
+# 3. Run training
+make train
+```
 
-# 4. Generate teacher predictions
-uv run python scripts/teacher/inference.py --data data/raw/sample.jsonl
+## Using Makefile
 
-# 5. Train student model
-uv run python scripts/train/train.py --config configs/train.yaml
+```bash
+# Setup & Installation
+make install          # Install dependencies (uv sync)
+make setup           # Full setup (install + download + verify)
+make verify          # Verify environment
+
+# Training
+make train           # Run training with CONFIG=configs/train.yaml
+
+# Docker
+make docker-build    # Build container image
+make docker-verify # Verify Docker setup
+
+# Data & Sync
+make download       # Download sample data
+make sync-data SYNC_HOST=user@brev-instance
+
+# Artifacts
+make download-artifacts REMOTE_HOST=user@brev-instance
+
+# Cleanup
+make clean          # Clean generated files
 ```
 
 ## Project Structure
 
 ```
+.
 ├── configs/          # Configuration files
-├── data/              # Data directory (downloads here)
+├── data/              # Data directory
 │   ├── raw/           # Raw downloaded data
 │   ├── processed/    # Cleaned and tokenized data
 │   └── cache/        # Cached teacher predictions
 ├── scripts/          # Executable scripts
-│   ├── data/         # Data download/preprocess
-│   ├── teacher/      # Teacher inference
-│   └── train/        # Training scripts
+│   ├── data/download.sh    # Data download script
+│   └── verify.sh          # Environment verification
 ├── src/               # Python source code
-└── docs/              # Documentation
+├── Dockerfile        # Container definition
+├── Makefile        # Command management
+├── pyproject.toml   # uv project config
+└── uv.lock        # Locked dependencies
 ```
 
 ## Requirements
 
 - Python 3.11+
 - uv (package manager)
+- Docker (optional, for containerized training)
 - Teacher model API key (user-provided)
-
-## Documentation
-
-See `docs/` directory for detailed guides.
