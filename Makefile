@@ -4,7 +4,7 @@
 PYTHON := python3
 UV := uv
 DOCKER := docker
-CONFIG ?= configs/train.yaml
+CONFIG ?= configs/train.example.yaml
 TEACHER_CONFIG ?= configs/teacher.env
 
 # Colors

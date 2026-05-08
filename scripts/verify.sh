@@ -50,7 +50,7 @@ fi
 
 echo ""
 echo "[5/6] Checking data directory..."
-if [ -d data/raw ] && [ "$(ls -A data/raw 2>/dev/null)" ]; then
+if [ -d data/raw ] && [ "$(ls -A data/raw 2>/dev/null | wc -l)" -gt 0 ]; then
     echo "Data files: $(ls data/raw | wc -l) files"
     check "Data directory ready"
 else
@@ -60,6 +60,7 @@ fi
 
 echo ""
 echo "[6/6] Checking write permissions..."
+mkdir -p checkpoints logs 2>/dev/null
 touch checkpoints/.test 2>/dev/null && rm checkpoints/.test
 touch logs/.test 2>/dev/null && rm logs/.test
 check "Write permissions OK"
