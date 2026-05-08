@@ -21,7 +21,7 @@ distillation:
 
 # Data
 data:
-  train_path: "data/processed/train.jsonl"
+  train_path: "data/raw/python-code.jsonl"
   val_path: "data/processed/val.jsonl"
   cache_path: "data/cache"
 
